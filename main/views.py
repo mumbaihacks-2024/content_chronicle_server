@@ -157,6 +157,7 @@ class GeneratePostsView(APIView):
         for i in range(5):
             post = Post(workspace=workspace, creator=request.user)
             generate_post(f, post)
+            post.save()
             posts.append(post)
         return Response(
             PostSerializer(posts, context=self.get_serializer_context(), many=True).data
