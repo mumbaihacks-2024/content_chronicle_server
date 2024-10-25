@@ -1,6 +1,12 @@
 from django.urls import path
 
-from main.views import RegisterView, LoginView, UserViewset, WorkspaceViewSet
+from main.views import (
+    RegisterView,
+    LoginView,
+    UserViewset,
+    WorkspaceViewSet,
+    GenerateEventView,
+)
 
 urlpatterns = [
     path("user/register", RegisterView.as_view(), name="register"),
@@ -26,5 +32,10 @@ urlpatterns = [
         "workspace/<int:workspace_id>/add-member",
         WorkspaceViewSet.as_view({"post": "add_member"}),
         name="create-workspace",
+    ),
+    path(
+        "workspace/<int:workspace_id>/generate-events",
+        GenerateEventView.as_view(),
+        name="generate-events",
     ),
 ]

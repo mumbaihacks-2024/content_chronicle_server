@@ -134,6 +134,10 @@ REST_FRAMEWORK = {
     ],
 }
 
+MEDIA_ROOT = "media"
+STATIC_ROOT = "staticfiles"
+MEDIA_URL = "/media/"
+
 if DEBUG:
     CORS_ALLOW_ALL_ORIGINS = True
     ALLOWED_HOSTS = ["*"]
@@ -147,3 +151,24 @@ if DEBUG:
     }
 
 AUTH_USER_MODEL = "main.User"
+
+# LOGGING = {
+#     "version": 1,
+#     "handlers": {
+#         "console": {
+#             "class": "logging.StreamHandler",
+#         },
+#     },
+#     "loggers": {
+#         "": {
+#             "handlers": ["console"],
+#             "level": "DEBUG",
+#             "propagate": False,
+#         },
+#         "content_chronicle": {
+#             "handlers": ["console"],
+#             "level": "DEBUG",
+#             "propagate": False,
+#         },
+#     },
+# }

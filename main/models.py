@@ -42,6 +42,8 @@ class PostType(models.TextChoices):
     video = 'video', 'Video'
     text = 'text', 'Text'
 
+def post_media_path(instance, filename):
+    return f'workspace/{instance.workspace.id}/posts/{instance.id}/{filename}'
 
 class Post(BaseModel):
     workspace = models.ForeignKey(Workspace, on_delete=models.CASCADE, related_name='events')
@@ -49,9 +51,9 @@ class Post(BaseModel):
     schedule_time = models.DateTimeField()
     assignee = models.ForeignKey(User, on_delete=models.CASCADE, related_name='assigned_events')
     post_type = models.CharField(max_length=100, choices=PostType.choices)
-    post_image = models.ImageField(null=True)
+    post_image = models.ImageField(null=True, upload_to=post_media_path)
+    post_video = models.FileField(null=True, upload_to=post_media_path)
     post_text = models.TextField(null=True)
-    post_video = models.FileField(null=True)
 
     is_completed = models.BooleanField(default=False)
     completed_at = models.DateTimeField(null=True)
