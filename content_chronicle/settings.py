@@ -140,3 +140,6 @@ REST_FRAMEWORK = {
 if DEBUG:
     CORS_ALLOW_ALL_ORIGINS = True
     ALLOWED_HOSTS = ["*"]
+
+
+AUTH_USER_MODEL = 'main.User'
