@@ -1,11 +1,11 @@
 from rest_framework import serializers
 
 from main.models import User
-from main.serializers.workspace_serializer import WorkspaceSerializer
+from main.serializers.workspace_serializer import WorkspaceSerializer, RemoveFieldSerializer
 
 
-class UserSerializer(serializers.ModelSerializer):
-    workspaces = WorkspaceSerializer(many=True, read_only=True)
+class UserSerializer(RemoveFieldSerializer):
+    workspaces = WorkspaceSerializer(many=True, read_only=True, remove_fields=['members'])
 
     class Meta:
         model = User

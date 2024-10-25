@@ -7,6 +7,7 @@ from rest_framework import viewsets
 
 from main.models import User, Workspace
 from main.serializers.user_serializer import UserSerializer
+from main.serializers.workspace_serializer import WorkspaceSerializer
 
 
 # Create your views here.
@@ -77,3 +78,47 @@ class UserViewset(viewsets.ModelViewSet):
 
     def get_object(self):
         return self.request.user
+
+
+class WorkspaceViewSet(viewsets.ModelViewSet):
+    serializer_class = WorkspaceSerializer
+    lookup_url_kwarg = 'workspace_id'
+
+    class AddMemberSerializer(serializers.Serializer):
+        email = serializers.EmailField()
+
+    def get_queryset(self):
+        return Workspace.objects.filter(members__in=[self.request.user]).prefetch_related('members')
+
+    def check_object_permissions(self, request, obj):
+        super().check_object_permissions(request, obj)
+        if self.action in ["update", "partial_update", "destroy", "add_member"]:
+            if obj.owner != request.user:
+                self.permission_denied(
+                    request, "You do not have permission to perform this action."
+                )
+
+    def create(self, request, *args, **kwargs):
+        request.data["owner"] = request.user.id
+        return super().create(request, *args, **kwargs)
+
+    def perform_create(self, serializer):
+        workspace = serializer.save()
+        workspace.members.add(self.request.user)
+
+    def add_member(self, request, *args, **kwargs):
+        serializer = self.AddMemberSerializer(data=self.request.data)
+        serializer.is_valid(raise_exception=True)
+        email = serializer.validated_data["email"]
+        workspace = self.get_object()
+
+        if not User.objects.filter(email=email).exists():
+            raise serializers.ValidationError("User does not exist")
+
+        user = User.objects.get(email=email)
+        if workspace.members.filter(id=user.id).exists():
+            raise serializers.ValidationError("User is already a member of this workspace")
+
+        workspace.members.add(user)
+
+        return Response(self.serializer_class(workspace).data)
