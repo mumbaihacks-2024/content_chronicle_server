@@ -13,7 +13,10 @@ class BaseModel(models.Model):
 # Create your models here.
 class User(AbstractUser):
     email = models.EmailField(unique=True)
+    username = models.CharField(max_length=128, name='username', verbose_name='Username')
     REQUIRED_FIELDS = []
+
+    USERNAME_FIELD = 'email'
 
     workspaces = models.ManyToManyField('Workspace', related_name='members')
     role = models.CharField(max_length=100, null=True)
