@@ -1,4 +1,3 @@
-
 from django.urls import path
 
 from main.views import (
@@ -9,6 +8,7 @@ from main.views import (
     GeneratePostsView,
     RegeneratePost,
     ReminderViewSet,
+    PostViewSet,
 )
 
 urlpatterns = [
@@ -45,6 +45,18 @@ urlpatterns = [
         "workspace/<int:workspace_id>/posts/<int:post_id>/regenerate",
         RegeneratePost.as_view(),
         name="regenerate-post",
+    ),
+    path(
+        "workspace/<int:workspace_id>/posts/<int:post_id>/",
+        PostViewSet.as_view(
+            {"put": "partial_update", "get": "retrieve", "delete": "destroy"}
+        ),
+        name="post-detail",
+    ),
+    path(
+        "workspace/<int:workspace_id>/posts/",
+        PostViewSet.as_view({"post": "create", "get": "list"}),
+        name="post-list",
     ),
     path(
         "workspace/<int:workspace_id>/posts/<int:post_id>/reminders",

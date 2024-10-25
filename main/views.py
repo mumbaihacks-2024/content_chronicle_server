@@ -136,6 +136,14 @@ class WorkspaceViewSet(viewsets.ModelViewSet):
         return Response(self.serializer_class(workspace).data)
 
 
+class PostViewSet(viewsets.ModelViewSet):
+    serializer_class = PostSerializer
+    lookup_url_kwarg = "post_id"
+
+    def get_queryset(self):
+        return Post.objects.filter(workspace__members__in=[self.request.user])
+
+
 class GeneratePostsView(APIView):
     class ParamSerializer(serializers.Serializer):
         custom_instructions = serializers.CharField(
