@@ -3,6 +3,7 @@ from rest_framework import serializers
 from rest_framework.authtoken.models import Token
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework import viewsets
 
 from main.models import User, Workspace
 from main.serializers.user_serializer import UserSerializer
@@ -66,3 +67,13 @@ class LoginView(APIView):
         user_serializer = UserSerializer(user)
 
         return Response({"user": user_serializer.data, "token": token.key})
+
+
+class UserViewset(viewsets.ModelViewSet):
+    serializer_class = UserSerializer
+
+    def get_queryset(self):
+        return User.objects.filter(id=self.request.user.id)
+
+    def get_object(self):
+        return self.request.user
