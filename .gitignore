@@ -1,0 +1,18 @@
+# django
+*.pyc
+*.pyo
+*.pyd
+
+# python
+*__pycache__/
+*.pyc
+
+
+# virtualenv
+venv/
+
+data/
+
+db.sqlite3
+
+.env
