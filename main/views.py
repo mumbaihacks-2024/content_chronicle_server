@@ -35,3 +35,33 @@ class RegisterView(APIView):
         user_serializer = UserSerializer(user)
 
         return Response({"user": user_serializer.data, "token": token.key})
+
+
+class LoginView(APIView):
+    permission_classes = []
+
+    class Serializer(serializers.Serializer):
+        email = serializers.EmailField()
+        password = serializers.CharField()
+
+
+    def post(self, request):
+        serializer = self.Serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        email = serializer.validated_data["email"]
+
+        user = User.objects.filter(email=email).first()
+        if user is None:
+            raise serializers.ValidationError(
+                {"email": "Email does not exist", "code": "email_not_found"}
+            )
+
+        if not user.check_password(serializer.validated_data["password"]):
+            raise serializers.ValidationError(
+                {"password": "Password is incorrect", "code": "incorrect_password"}
+            )
+
+        token, _ = Token.objects.get_or_create(user=user)
+        user_serializer = UserSerializer(user)
+
+        return Response({"user": user_serializer.data, "token": token.key})
