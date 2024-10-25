@@ -1,21 +1,21 @@
 from datetime import datetime, timedelta
-from sched import Event
 
+import faker
 import requests
 from django.core.files.base import ContentFile
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import get_object_or_404
 from rest_framework import serializers
+from rest_framework import viewsets
 from rest_framework.authtoken.models import Token
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework import viewsets
 
 from content_chronicle import logger
-from main.models import User, Workspace, Post, PostType
+from main.models import User, Workspace, Post, Reminder
 from main.serializers.post_serializer import PostSerializer
+from main.serializers.reminder_serializer import ReminderSerializer
 from main.serializers.user_serializer import UserSerializer
 from main.serializers.workspace_serializer import WorkspaceSerializer
-import faker
 
 
 # Create your views here.
@@ -188,7 +188,7 @@ class RegeneratePost(APIView):
         f = faker.Faker()
         generate_post(f, post)
         post.save()
-        return Response(PostSerializer(post, context={'request': request}).data)
+        return Response(PostSerializer(post, context={"request": request}).data)
 
 
 def generate_post(f, post):
@@ -206,3 +206,24 @@ def generate_post(f, post):
     post.post_image = ContentFile(image, f"{f.pystr(min_chars=5, max_chars=10)}.jpg")
     post.post_text = text
     post.assignee = assignee
+
+
+class ReminderViewSet(viewsets.ModelViewSet):
+    serializer_class = ReminderSerializer
+    lookup_url_kwarg = "reminder_id"
+
+    def get_queryset(self):
+        return Reminder.objects.filter(post__workspace__members__in=[self.request.user])
+
+    def check_object_permissions(self, request, obj: Reminder):
+        super().check_object_permissions(request, obj)
+        if self.action in ["update", "partial_update", "destroy"]:
+            if obj.creator != request.user:
+                self.permission_denied(
+                    request, "You do not have permission to perform this action."
+                )
+
+    def create(self, request, *args, **kwargs):
+        request.data["creator"] = request.user.id
+        request.data["post"] = kwargs["post_id"]
+        return super().create(request, *args, **kwargs)

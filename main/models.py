@@ -73,6 +73,7 @@ class Post(BaseModel):
         ordering = ['schedule_time']
 
 class Reminder(BaseModel):
+    creator = models.ForeignKey(User, on_delete=models.CASCADE, related_name='created_reminders')
     post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='reminders')
     reminder_time = models.DateTimeField()
     is_notified = models.BooleanField(default=False)
