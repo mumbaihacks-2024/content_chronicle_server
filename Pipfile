@@ -7,6 +7,8 @@ name = "pypi"
 psycopg = {extras = ["pool", "binary"], version = "*"}
 djangorestframework = "*"
 django-cors-headers = "*"
+dj-database-url = "*"
+python-dotenv = "*"
 
 [dev-packages]
 
