@@ -4,7 +4,7 @@ import os
 from google.ai.generativelanguage_v1beta.types import content
 import google.generativeai as genai
 
-from main.models import Workspace, User, PostGenerationSession
+from main.models import Workspace, User, PostGenerationSession, Post
 
 genai.configure(api_key=os.environ["GEMINI_API_KEY"])
 
@@ -24,7 +24,14 @@ generation_config = {
                 items=content.Schema(
                     type=content.Type.OBJECT,
                     enum=[],
-                    required=["descr", "cap", "post_time", "img_prompt", "vid_prompt", "assignee_id"],
+                    required=[
+                        "descr",
+                        "cap",
+                        "post_time",
+                        "img_prompt",
+                        "vid_prompt",
+                        "assignee_id",
+                    ],
                     properties={
                         "descr": content.Schema(
                             type=content.Type.STRING,
@@ -69,7 +76,6 @@ def generate_posts_ai(
         f"select assignee for each post based on their roles.\n"
         f"generate multiple posts if there are multiple events, generate at least 3 posts."
     )
-    print(f"System Instruction: {system_instruction}")
     model = genai.GenerativeModel(
         model_name="gemini-1.5-flash",
         generation_config=generation_config,
@@ -96,4 +102,49 @@ def generate_posts_ai(
         f"Generate social media content for date between {range_start} and {range_end}"
     )
     response = chat_session.send_message(prompt)
-    return json.loads(response.text)
+    return json.loads(response.text), prompt
+
+
+def regenerate_posts_ai(
+    workspace: Workspace,
+    prompt: str,
+    post: Post,
+    session: PostGenerationSession | None = None,
+):
+    user_roles = workspace.members.all().values("id", "email", "role")
+    post_data = {
+        "descr": post.description,
+        "cap": post.post_text,
+        "post_time": post.schedule_time.isoformat(),
+        "img_prompt": post.img_prompt,
+        "vid_prompt": post.vid_prompt,
+        "assignee_id": post.assignee_id,
+    }
+    system_instruction = (
+        f"generate the content for professional social media marketing\n"
+        f"users: {list(user_roles)}\n"
+        f"select assignee for each post based on their roles.\n"
+        f"generate a single post in replacement of the post {post_data}"
+    )
+
+    model = genai.GenerativeModel(
+        model_name="gemini-1.5-flash",
+        generation_config=generation_config,
+        system_instruction=system_instruction,
+    )
+
+    history = []
+    if session is not None:
+        session_history = session.history.all().values("prompt", "response")
+        history = [
+            [
+                {"role": "user", "parts": [x["prompt"]]},
+                {"role": "model", "parts": [x["response"]]},
+            ]
+            for x in session_history
+        ]
+        history = [item for sublist in history for item in sublist]
+    chat_session = model.start_chat(history=history)
+
+    response = chat_session.send_message(prompt)
+    return json.loads(response.text), prompt
