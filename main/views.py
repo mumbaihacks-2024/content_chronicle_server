@@ -4,7 +4,7 @@ from rest_framework.authtoken.models import Token
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from main.models import User
+from main.models import User, Workspace
 from main.serializers.user_serializer import UserSerializer
 
 
@@ -24,6 +24,8 @@ class RegisterView(APIView):
 
         def save(self, **kwargs):
             user = User.objects.create_user(**self.validated_data)
+            workspace = Workspace.objects.create(name="Default Workspace", owner=user)
+            workspace.members.add(user)
             return user
 
     def post(self, request):
@@ -43,7 +45,6 @@ class LoginView(APIView):
     class Serializer(serializers.Serializer):
         email = serializers.EmailField()
         password = serializers.CharField()
-
 
     def post(self, request):
         serializer = self.Serializer(data=request.data)
