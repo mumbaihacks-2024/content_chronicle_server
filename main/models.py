@@ -62,6 +62,9 @@ class Post(BaseModel):
     user_notes = models.TextField(null=True)
     session = models.ForeignKey('PostGenerationSession', on_delete=models.CASCADE, related_name='posts', null=True)
 
+    img_prompt = models.TextField(null=True)
+    vid_prompt = models.TextField(null=True)
+
     is_deleted = models.BooleanField(default=False)
 
     class Meta:

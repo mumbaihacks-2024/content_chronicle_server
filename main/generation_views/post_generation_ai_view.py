@@ -7,7 +7,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from main.generate_post_ai import generate_posts_ai
-from main.models import PostGenerationSession, Workspace
+from main.models import PostGenerationSession, Workspace, Post, PostType
 from main.serializers.post_serializer import PostSerializer
 
 
@@ -43,6 +43,20 @@ class GeneratePostsViewAI(APIView):
             range_end=data["range_end"].isoformat(),
             custom_instructions=data.get("custom_instructions"),
         )
+        for i in response['response']:
+            post = Post.objects.create(
+                description=i["descr"],
+                img_prompt=i["img_prompt"],
+                vid_prompt=i["vid_prompt"],
+                schedule_time=i["post_time"],
+                assignee_id=i["assignee_id"],
+                post_text=i["cap"],
+                session=session,
+                post_type=PostType.image,
+                creator=request.user,
+                workspace=workspace,
+            )
+            posts.append(post)
 
         return Response(
             PostSerializer(posts, context=self.get_serializer_context(), many=True).data
