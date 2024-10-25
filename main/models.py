@@ -60,6 +60,7 @@ class Post(BaseModel):
 
     description = models.TextField(null=True)
     user_notes = models.TextField(null=True)
+    session = models.ForeignKey('PostGenerationSession', on_delete=models.CASCADE, related_name='posts', null=True)
 
     is_deleted = models.BooleanField(default=False)
 
@@ -87,3 +88,26 @@ class Reminder(BaseModel):
             models.Index(fields=['snooze_time']),
         ]
         ordering = ['reminder_time']
+
+class PostGenerationSession(BaseModel):
+    creator = models.ForeignKey(User, on_delete=models.CASCADE, related_name='post_generation_sessions')
+    workspace = models.ForeignKey(Workspace, on_delete=models.CASCADE, related_name='post_generation_sessions')
+
+    class Meta:
+        db_table = 'post_generation_session'
+        indexes = [
+            models.Index(fields=['created_at']),
+        ]
+        ordering = ['created_at']
+
+class PostGenerationSessionHistory(BaseModel):
+    session = models.ForeignKey(PostGenerationSession, on_delete=models.CASCADE, related_name='history')
+    prompt = models.TextField()
+    response = models.TextField()
+
+    class Meta:
+        db_table = 'post_generation_session_history'
+        indexes = [
+            models.Index(fields=['created_at']),
+        ]
+        ordering = ['created_at']

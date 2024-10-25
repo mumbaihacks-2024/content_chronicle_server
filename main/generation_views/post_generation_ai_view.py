@@ -1,0 +1,52 @@
+import json
+from datetime import datetime, timedelta
+
+from django.shortcuts import get_object_or_404
+from rest_framework import serializers
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
+from main.generate_post_ai import generate_posts_ai
+from main.models import PostGenerationSession, Workspace
+from main.serializers.post_serializer import PostSerializer
+
+
+class GeneratePostsViewAI(APIView):
+    class ParamSerializer(serializers.Serializer):
+        custom_instructions = serializers.CharField(
+            allow_null=True, allow_blank=True, required=False
+        )
+        range_start = serializers.DateField(default=lambda: datetime.now().date())
+        range_end = serializers.DateField(
+            default=lambda: datetime.now().date() + timedelta(days=7)
+        )
+        session_id = serializers.PrimaryKeyRelatedField(
+            queryset=PostGenerationSession.objects.all(),
+            required=False,
+            allow_null=True,
+        )
+
+    def post(self, request, workspace_id):
+        workspace = get_object_or_404(Workspace, id=workspace_id)
+        serializers = self.ParamSerializer(data=request.data)
+        serializers.is_valid(raise_exception=True)
+        data = serializers.validated_data
+        posts = []
+        session = data.get(
+            "session_id", PostGenerationSession.objects.create(workspace=workspace, creator=request.user)
+        )
+        response = generate_posts_ai(
+            workspace,
+            request.user,
+            session,
+            range_start=data["range_start"].isoformat(),
+            range_end=data["range_end"].isoformat(),
+            custom_instructions=data.get("custom_instructions"),
+        )
+
+        return Response(
+            PostSerializer(posts, context=self.get_serializer_context(), many=True).data
+        )
+
+    def get_serializer_context(self):
+        return {"request": self.request}

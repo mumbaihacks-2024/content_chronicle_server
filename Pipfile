@@ -12,6 +12,7 @@ python-dotenv = "*"
 pillow = "*"
 faker = "*"
 requests = "*"
+google-generativeai = "*"
 
 [dev-packages]
 
