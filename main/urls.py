@@ -5,7 +5,7 @@ from main.views import (
     LoginView,
     UserViewset,
     WorkspaceViewSet,
-    GenerateEventView,
+    GeneratePostsView, RegeneratePost,
 )
 
 urlpatterns = [
@@ -34,8 +34,13 @@ urlpatterns = [
         name="create-workspace",
     ),
     path(
-        "workspace/<int:workspace_id>/generate-events",
-        GenerateEventView.as_view(),
-        name="generate-events",
+        "workspace/<int:workspace_id>/generate-posts",
+        GeneratePostsView.as_view(),
+        name="generate-posts",
+    ),
+    path(
+        "workspace/<int:workspace_id>/posts/<int:post_id>/regenerate",
+        RegeneratePost.as_view(),
+        name="regenerate-post",
     ),
 ]

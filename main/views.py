@@ -136,7 +136,7 @@ class WorkspaceViewSet(viewsets.ModelViewSet):
         return Response(self.serializer_class(workspace).data)
 
 
-class GenerateEventView(APIView):
+class GeneratePostsView(APIView):
     class ParamSerializer(serializers.Serializer):
         custom_instructions = serializers.CharField(
             allow_null=True, allow_blank=True, required=False
@@ -155,35 +155,54 @@ class GenerateEventView(APIView):
         posts = []
         f = faker.Faker()
         for i in range(5):
-            image = requests.get(
-                f"https://picsum.photos/1080/720?random={f.pyint(max_value=20)}"
-            ).content
-            description = f.text(50)
-            text = f.text(50)
-            schedule_datetime = f.date_time_between(
-                data["range_start"], data["range_end"]
-            )
-            assignee = f.random_element(workspace.members.all())
-            post = Post.objects.create(
-                description=description,
-                schedule_time=schedule_datetime,
-                post_image=ContentFile(
-                    image, f"{f.pystr(min_chars=5, max_chars=10)}.jpg"
-                ),
-                post_type=PostType.image,
-                post_text=text,
-                assignee=assignee,
-                workspace=workspace,
-                creator=request.user,
-            )
+            post = Post(workspace=workspace, creator=request.user)
+            generate_post(f, post)
             posts.append(post)
         return Response(
-            PostSerializer(
-                posts, context=self.get_serializer_context(request), many=True
-            ).data
+            PostSerializer(posts, context=self.get_serializer_context(), many=True).data
         )
 
-    def get_serializer_context(self, request):
-        return {
-            "request": request,
-        }
+    def get_serializer_context(self):
+        return {"request": self.request}
+
+
+class RegeneratePost(APIView):
+    class Serializer(serializers.Serializer):
+        prompt = serializers.CharField()
+
+    def get_object(self, workspace_id, post_id):
+        return get_object_or_404(Post, id=post_id, workspace_id=workspace_id)
+
+    def check_object_permissions(self, request, obj):
+        if not obj.workspace.members.filter(id=request.user.id).exists():
+            self.permission_denied(
+                request, "You do not have permission to perform this action."
+            )
+
+    def post(self, request, workspace_id, post_id):
+        post = get_object_or_404(Post, id=post_id, workspace_id=workspace_id)
+        self.check_object_permissions(request, post)
+        serializer = self.Serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        f = faker.Faker()
+        generate_post(f, post)
+        post.save()
+        return Response(PostSerializer(post, context={'request': request}).data)
+
+
+def generate_post(f, post):
+    image = requests.get(
+        f"https://picsum.photos/1080/720?random={f.pyint(max_value=20)}"
+    ).content
+    description = f.text(50)
+    text = f.text(50)
+    schedule_datetime = f.date_time_between(
+        datetime.now(), datetime.now() + timedelta(days=7)
+    )
+    assignee = f.random_element(post.workspace.members.all())
+    post.description = description
+    post.schedule_time = schedule_datetime
+    post.post_image = ContentFile(image, f"{f.pystr(min_chars=5, max_chars=10)}.jpg")
+    post.post_text = text
+    post.assignee = assignee
