@@ -141,7 +141,10 @@ class PostViewSet(viewsets.ModelViewSet):
     lookup_url_kwarg = "post_id"
 
     def get_queryset(self):
-        return Post.objects.filter(workspace__members__in=[self.request.user])
+        workspace_id = self.kwargs["workspace_id"]
+        return Post.objects.filter(
+            workspace__members__in=[self.request.user], workspace_id=workspace_id
+        )
 
 
 class GeneratePostsView(APIView):
