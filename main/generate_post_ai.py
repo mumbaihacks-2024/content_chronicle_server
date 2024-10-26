@@ -157,7 +157,7 @@ def regenerate_posts_ai(
 def generate_post_image(post: Post, prompt: str):
     client = openai.Client(api_key=OPENAI_KEY)
     response = client.images.generate(
-        model="dall-e-2", prompt=prompt, size="1024x1024", response_format="url", n=1
+        model="dall-e-2", prompt=prompt, size="512x512", response_format="url", n=1
     )
     img_data = requests.get(response.data[0].url).content
     post.post_image.save(f"{post.id}.png", ContentFile(img_data))

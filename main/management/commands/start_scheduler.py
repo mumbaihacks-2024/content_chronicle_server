@@ -62,4 +62,3 @@ class Command(BaseCommand):
 
         scheduler.start()
         logger.info("Scheduler started!")
-        
