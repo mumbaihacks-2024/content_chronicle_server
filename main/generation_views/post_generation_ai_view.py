@@ -7,7 +7,7 @@ from rest_framework import serializers
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from main.generate_post_ai import generate_posts_ai, regenerate_posts_ai
+from main.generate_post_ai import generate_posts_ai, regenerate_posts_ai, generate_post_image
 from main.models import (
     PostGenerationSession,
     Workspace,
@@ -105,6 +105,28 @@ class RegeneratePostViewAI(APIView):
             PostGenerationSessionHistory.objects.create(
                 session=post.session, prompt=prompt, response=response
             )
+        return Response(
+            PostSerializer(post, context={'request': request}).data
+        )
+
+
+class GeneratePostImageViewAI(APIView):
+
+    def check_object_permissions(self, request, obj):
+        if not obj.workspace.members.filter(id=request.user.id).exists():
+            self.permission_denied(
+                request, "You do not have permission to perform this action."
+            )
+
+    class Serializer(serializers.Serializer):
+        prompt = serializers.CharField()
+
+    def post(self, request, workspace_id, post_id):
+        post = get_object_or_404(Post, id=post_id, workspace_id=workspace_id)
+        serializer = self.Serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+        generate_post_image(post, data["prompt"])
         return Response(
             PostSerializer(post, context={'request': request}).data
         )

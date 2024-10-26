@@ -13,6 +13,7 @@ pillow = "*"
 faker = "*"
 requests = "*"
 google-generativeai = "*"
+openai = "*"
 
 [dev-packages]
 

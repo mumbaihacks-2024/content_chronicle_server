@@ -2,7 +2,7 @@ from django.urls import path
 
 from main.generation_views.post_generation_ai_view import (
     GeneratePostsViewAI,
-    RegeneratePostViewAI,
+    RegeneratePostViewAI, GeneratePostImageViewAI,
 )
 from main.views import (
     RegisterView,
@@ -58,6 +58,11 @@ urlpatterns = [
     path(
         "workspace/<int:workspace_id>/posts/<int:post_id>/regenerate-ai",
         RegeneratePostViewAI.as_view(),
+        name="regenerate-post-ai",
+    ),
+    path(
+        "workspace/<int:workspace_id>/posts/<int:post_id>/generate-post-image-ai",
+        GeneratePostImageViewAI.as_view(),
         name="regenerate-post-ai",
     ),
     path(

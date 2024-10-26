@@ -1,9 +1,13 @@
 import json
 import os
 
+import openai
+import requests
+from django.core.files.base import ContentFile
 from google.ai.generativelanguage_v1beta.types import content
 import google.generativeai as genai
 
+from content_chronicle.settings import OPENAI_KEY
 from main.models import Workspace, User, PostGenerationSession, Post
 
 genai.configure(api_key=os.environ["GEMINI_API_KEY"])
@@ -148,3 +152,13 @@ def regenerate_posts_ai(
 
     response = chat_session.send_message(prompt)
     return json.loads(response.text), prompt
+
+
+def generate_post_image(post: Post, prompt: str):
+    client = openai.Client(api_key=OPENAI_KEY)
+    response = client.images.generate(
+        model="dall-e-2", prompt=prompt, size="1024x1024", response_format="url", n=1
+    )
+    img_data = requests.get(response.data[0].url).content
+    post.post_image.save(f"{post.id}.png", ContentFile(img_data))
+    post.save()
