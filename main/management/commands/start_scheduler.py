@@ -58,3 +58,8 @@ class Command(BaseCommand):
             max_instances=1,
             replace_existing=True,
         )
+        logger.info('Added job "check_reminders".')
+
+        scheduler.start()
+        logger.info("Scheduler started!")
+        
