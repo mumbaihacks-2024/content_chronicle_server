@@ -9,13 +9,16 @@ https://docs.djangoproject.com/en/5.1/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.1/ref/settings/
 """
-
+import json
 import os
 from pathlib import Path
 
 import dj_database_url
 from corsheaders.middleware import CorsMiddleware
 from dotenv import load_dotenv
+
+import firebase_admin
+from firebase_admin import credentials
 
 load_dotenv()
 
@@ -174,3 +177,6 @@ AUTH_USER_MODEL = "main.User"
 # }
 
 OPENAI_KEY = os.getenv("OPENAI_API_KEY")
+
+cred = credentials.Certificate('firebase-service-account.json')
+firebase_admin.initialize_app(cred)

@@ -21,3 +21,5 @@ media
 staticfiles
 
 test_data
+
+firebase-service-account.json

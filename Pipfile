@@ -14,6 +14,8 @@ faker = "*"
 requests = "*"
 google-generativeai = "*"
 openai = "*"
+firebase-admin = "*"
+django-apscheduler = "*"
 
 [dev-packages]
 
